@@ -6,6 +6,92 @@ from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
 from .models import Category    
 from .models import Quiz
+from django.shortcuts import get_object_or_404
+from .models import Quiz, Question
+from django.contrib.auth.decorators import login_required
+from .models import Option
+from .models import Attempt, Answer
+
+@login_required
+def my_attempts(request):
+    attempts = Attempt.objects.filter(user=request.user).order_by('-completed_at')
+    return render(request, 'core/my_attempts.html', {'attempts': attempts})
+
+@login_required
+def quiz_result(request):
+    score = request.session.get('score', 0)
+    quiz_id = request.session.get('quiz_id')
+    quiz = get_object_or_404(Quiz, pk=quiz_id)
+    total_questions = quiz.question_set.count()
+    answers = request.session.get('answers', {})
+
+    # Save attempt
+    attempt = Attempt.objects.create(
+        user=request.user,
+        quiz=quiz,
+        score=score,
+        total=total_questions,
+    )
+
+    # Save each answer
+    for qid, oid in answers.items():
+        question = Question.objects.get(pk=qid)
+        option = Option.objects.get(pk=oid)
+        Answer.objects.create(
+            attempt=attempt,
+            question=question,
+            selected_option=option
+        )
+
+    # Clear session
+    for key in ['score', 'quiz_id', 'question_index', 'answers']:
+        request.session.pop(key, None)
+
+    return render(request, 'core/quiz_result.html', {
+        'score': score,
+        'total_questions': total_questions,
+        'quiz': quiz
+    })
+
+
+@login_required
+def attempt_quiz(request):
+    quiz_id = request.session.get('quiz_id')    
+    question_index = request.session.get('question_index', 0)
+    quiz = get_object_or_404(Quiz, pk=quiz_id)
+    questions = quiz.question_set.all()
+    if question_index >= len(questions):
+        return redirect('quiz_result')
+    current_question = questions[question_index]    
+    options = current_question.options.all()
+    if request.method == 'POST':
+        selected_option_id = request.POST.get('option')
+        if selected_option_id:
+            selected_option = Option.objects.get(id=selected_option_id)
+# Store user's answer
+            request.session['answers'][str(current_question.id)] = selected_option.id
+# Update score
+            if selected_option.is_correct:
+                request.session['score'] += 1
+# Move to next question
+        request.session['question_index'] += 1
+        return redirect('attempt_quiz')
+    return render(request, 'core/quiz_attempt.html', {
+'question': current_question,
+'options': options,
+'question_number': question_index + 1,
+'total_questions': len(questions),
+})
+@login_required
+def start_quiz(request, quiz_id):   
+    quiz = get_object_or_404(Quiz, pk=quiz_id)
+    questions = quiz.question_set.all()
+# Start at question 0
+    request.session['quiz_id'] = quiz_id
+    request.session['question_index'] = 0
+    request.session['score'] = 0
+    request.session['answers'] = {}
+    return redirect('attempt_quiz')
 
 def category_quizzes(request, category_id):
     quizzes = Quiz.objects.filter(category_id=category_id)
