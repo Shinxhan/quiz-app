@@ -18,6 +18,7 @@ from django.contrib import admin
 from django.urls import path
 from core import views
 urlpatterns = [
+path('admin/dashboard/', views.admin_dashboard, name='admin_dashboard'),
  path('admin/', admin.site.urls),
  path('', views.home, name='home'),
  path('register/', views.register, name='register'),
@@ -28,5 +29,6 @@ urlpatterns = [
 path('quiz/attempt/', views.attempt_quiz, name='attempt_quiz'),
 path('quiz/result/', views.quiz_result, name='quiz_result'),
 path('my-attempts/', views.my_attempts, name='my_attempts'),
+
 
 ]

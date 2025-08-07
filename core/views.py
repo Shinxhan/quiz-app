@@ -11,6 +11,21 @@ from .models import Quiz, Question
 from django.contrib.auth.decorators import login_required
 from .models import Option
 from .models import Attempt, Answer
+from django.contrib.admin.views.decorators import staff_member_required
+from django.db.models import Count
+
+@staff_member_required
+def admin_dashboard(request):
+    from .models import User, Quiz, Attempt
+
+    context = {
+        'total_users': User.objects.count(),
+        'total_quizzes': Quiz.objects.count(),
+        'total_attempts': Attempt.objects.count(),
+        'top_quizzes': Quiz.objects.annotate(attempts=Count('attempt')).order_by('-attempts')[:5],
+    }
+
+    return render(request, 'core/admin_dashboard.html', context)
 
 @login_required
 def my_attempts(request):
