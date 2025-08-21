@@ -1,0 +1,15 @@
+{% extends 'core/base.html' %}
+{% block content %}
+<h3>Add New Quiz</h3>
+<form method="post">
+    {% csrf_token %}
+    <input type="text" name="title" placeholder="Title" class="form-control mb-2" required>
+    <select name="category" required>
+        <option value="" disabled selected>Select a category</option >
+            {% for cat in categories %}
+                <option value="{{ cat.id }}">{{ cat.name }}</option>
+            {% endfor %}
+    </select>
+    <button type="submit" class="btn btn-success">Add Quiz</button>
+</form>
+{% endblock %}

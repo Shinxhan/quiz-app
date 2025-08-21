@@ -1,0 +1,28 @@
+{% extends 'core/base.html' %}
+{% block content %}
+<h3>Manage Quizzes</h3>
+
+<a href="{% url 'admin_add_quiz' %}" class="btn btn-primary mb-3">Add Single Quiz</a>
+<a href="{% url 'upload_quizzes_csv' %}" class="btn btn-secondary mb-3 ml-2">Upload Quizzes</a>
+
+<table class="table table-bordered">
+    <thead>
+        <tr>
+            <th>Title</th><th>Category</th><th>Created At</th><th>Actions</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for quiz in quizzes %}
+        <tr>
+            <td>{{ quiz.title }}</td>
+            <td>{{ quiz.category }}</td>
+            <td>{{ quiz.created_at }}</td>
+            <td>
+	    <a href="{% url 'edit_quiz' quiz.id %}" class="btn btn-warning btn-sm">Edit</a>
+                <a href="{% url 'delete_quiz' quiz.id %}" class="btn btn-danger btn-sm">Delete</a>
+            </td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% endblock %}

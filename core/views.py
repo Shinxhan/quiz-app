@@ -21,6 +21,73 @@ import csv
 from io import TextIOWrapper
 
 @staff_member_required
+def admin_manage_quizzes(request):
+    quizzes = Quiz.objects.all()
+    return render(request, 'core/admin_quizzes.html', {'quizzes': quizzes})
+
+@staff_member_required
+def admin_add_quiz(request):
+    categories = Category.objects.all()
+    if request.method == 'POST':
+        title = request.POST.get('title')
+        category_id = request.POST.get('category')
+        category = Category.objects.get(id=category_id)
+        if Quiz.objects.filter(title=title, category=category).exists():
+            messages.error(request, "Quiz already exists.")
+        else:
+            Quiz.objects.create(title=title, category=category)
+            messages.success(request, "Quiz created successfully.")
+        return redirect('admin_manage_quizzes')
+    return render(request, 'core/admin_add_quiz.html', {'categories':categories})
+
+@staff_member_required
+def edit_quiz(request, quiz_id):
+    categories = Category.objects.all()
+    quiz = get_object_or_404(Quiz, id=quiz_id)
+
+    if request.method == 'POST':
+        quiz.title = request.POST.get('title')
+        quiz.category_id = request.POST.get('category')
+        quiz.category = Category.objects.get(id=quiz.category_id)
+        if Quiz.objects.filter(title=quiz.title, category=quiz.category).exists():
+            messages.error(request, "Quiz already exists.")
+        else:
+            quiz.save()
+        
+        messages.success(request, "Quiz updated successfully.")
+        return redirect('admin_manage_quizzes')
+
+    return render(request, 'core/admin_edit_quiz.html', {'quiz': quiz, 'categories':categories})
+
+@staff_member_required
+def delete_quiz(request, quiz_id):
+    quiz = get_object_or_404(Quiz, id=quiz_id)
+    quiz.delete()
+    messages.success(request, "Quiz deleted.")
+    return redirect('admin_manage_quizzes')
+
+@staff_member_required
+def upload_quizzes_csv(request):
+    if request.method == 'POST':
+        csv_file = request.FILES['csv_file']
+        file_data = TextIOWrapper(csv_file.file, encoding='utf-8')
+        reader = csv.DictReader(file_data)
+
+        for row in reader:
+            title = row['title']
+            category = row['category']
+            category_qs = Category.objects.filter(name=category)
+            if category_qs.exists():
+                category = category_qs.first()
+                if not Quiz.objects.filter(title=title, category=category).exists():
+                    Quiz.objects.create(title=title, category=category)
+
+        messages.success(request, "Quizzes uploaded successfully.")
+        return redirect('admin_manage_quizzes')
+
+    return render(request, 'core/admin_upload_quizzes.html')
+
+@staff_member_required
 def admin_manage_users(request):
     users = User.objects.all()
     return render(request, 'core/admin_users.html', {'users': users})
