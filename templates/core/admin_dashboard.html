@@ -21,4 +21,25 @@
     {% endfor %}
 </ul>
 
+<div class="row">
+    <div class="col-md-4">
+        <div class="card text-white bg-primary mb-3">
+            <div class="card-body">
+                <h5 class="card-title">Manage Users</h5>
+                <a href="{% url 'admin_manage_users' %}" class="btn btn-light">Go</a>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-4">
+        <div class="card text-white bg-success mb-3">
+            <div class="card-body">
+                <h5 class="card-title">Manage Quizzes</h5>
+                <a href="#" class="btn btn-light">Go</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+
 {% endblock %}

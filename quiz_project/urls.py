@@ -29,6 +29,12 @@ path('admin/dashboard/', views.admin_dashboard, name='admin_dashboard'),
 path('quiz/attempt/', views.attempt_quiz, name='attempt_quiz'),
 path('quiz/result/', views.quiz_result, name='quiz_result'),
 path('my-attempts/', views.my_attempts, name='my_attempts'),
+    path('admin/users/', views.admin_manage_users, name='admin_manage_users'),
+    path('admin/users/add/', views.admin_add_user, name='admin_add_user'),
+    path('admin/users/edit/<int:user_id>/', views.edit_user, name='edit_user'),
+    path('admin/users/upload_csv/', views.upload_users_csv, name='upload_users_csv'),
+    path('admin/users/delete/<int:user_id>/', views.delete_user, name='delete_user'),
+    path('admin_manage_users/', views.admin_manage_users, name='admin_manage_users'),
 
 
 ]
