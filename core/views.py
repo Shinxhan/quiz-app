@@ -21,6 +21,73 @@ import csv
 from io import TextIOWrapper
 
 @staff_member_required
+def admin_manage_quizzes(request):
+    quizzes = Quiz.objects.all()
+    return render(request, 'core/admin_quizzes.html', {'quizzes': quizzes})
+
+@staff_member_required
+def admin_add_quiz(request):
+    categories = Category.objects.all()
+    if request.method == 'POST':
+        title = request.POST.get('title')
+        category_id = request.POST.get('category')
+        status = request.POST.get('status')
+        
+        category = get_object_or_404(Category, id=category_id)
+
+        Quiz.objects.create(title=title, category=category, status=status)
+        messages.success(request, "Quiz added successfully.")
+        return redirect('admin_manage_quizzes')
+
+    return render(request, 'core/admin_add_quiz.html', {'categories': categories})
+
+@staff_member_required
+def admin_edit_quiz(request, quiz_id):
+    quiz = get_object_or_404(Quiz, id=quiz_id)
+    categories = Category.objects.all()
+
+    if request.method == 'POST':
+        quiz.title = request.POST.get('title')
+        category_id = request.POST.get('category')
+        quiz.category = get_object_or_404(Category, id=category_id)
+        quiz.status = request.POST.get('status')
+        quiz.save()
+        messages.success(request, "Quiz updated successfully.")
+        return redirect('admin_manage_quizzes')
+
+    return render(request, 'core/admin_edit_quiz.html', {'quiz': quiz, 'categories': categories})
+
+@staff_member_required
+def admin_delete_quiz(request, quiz_id):
+    quiz = get_object_or_404(Quiz, id=quiz_id)
+    quiz.delete()
+    messages.success(request, "Quiz deleted.")
+    return redirect('admin_manage_quizzes')
+
+@staff_member_required
+def upload_quizzes_csv(request):
+    if request.method == 'POST':
+        csv_file = request.FILES['csv_file']
+        file_data = TextIOWrapper(csv_file.file, encoding='utf-8')
+        reader = csv.DictReader(file_data)
+
+        for row in reader:
+            category_name = row['category']
+            category, _ = Category.objects.get_or_create(name=category_name)
+
+            Quiz.objects.create(
+                title=row['title'],
+                category=category,
+                status=row.get('status', 'active')
+            )
+
+        messages.success(request, "Quizzes uploaded successfully.")
+        return redirect('admin_manage_quizzes')
+
+    return render(request, 'core/admin_upload_quizzes.html')
+
+
+@staff_member_required
 def admin_manage_users(request):
     users = User.objects.all()
     return render(request, 'core/admin_users.html', {'users': users})
@@ -168,15 +235,20 @@ def attempt_quiz(request):
 'total_questions': len(questions),
 })
 @login_required
-def start_quiz(request, quiz_id):   
-    quiz = get_object_or_404(Quiz, pk=quiz_id)
-    questions = quiz.question_set.all()
-# Start at question 0
-    request.session['quiz_id'] = quiz_id
-    request.session['question_index'] = 0
-    request.session['score'] = 0
-    request.session['answers'] = {}
-    return redirect('attempt_quiz')
+def start_quiz(request, quiz_id):
+    quiz = get_object_or_404(Quiz, id=quiz_id)
+
+    if quiz.status != 'active':
+        messages.warning(request, "This quiz is not currently active.")
+        return redirect('quizzes_by_category')
+
+    questions = Question.objects.filter(quiz=quiz).order_by('?')
+    return render(request, 'core/quiz_attempt.html', {
+        'quiz': quiz,
+        'questions': questions,
+        'total_questions': questions.count()
+    })
+
 
 def category_quizzes(request, category_id):
     quizzes = Quiz.objects.filter(category_id=category_id)

@@ -19,6 +19,11 @@ from django.urls import path
 from core import views
 urlpatterns = [
 path('admin/dashboard/', views.admin_dashboard, name='admin_dashboard'),
+path('admin/quizzes/', views.admin_manage_quizzes, name='admin_manage_quizzes'),
+path('admin/quizzes/add/', views.admin_add_quiz, name='admin_add_quiz'),
+path('admin/quizzes/edit/<int:quiz_id>/', views.admin_edit_quiz, name='admin_edit_quiz'),
+path('admin/quizzes/delete/<int:quiz_id>/', views.admin_delete_quiz, name='admin_delete_quiz'),
+path('admin/quizzes/upload_csv/', views.upload_quizzes_csv, name='upload_quizzes_csv'),
  path('admin/', admin.site.urls),
  path('', views.home, name='home'),
  path('register/', views.register, name='register'),
@@ -35,6 +40,8 @@ path('my-attempts/', views.my_attempts, name='my_attempts'),
     path('admin/users/upload_csv/', views.upload_users_csv, name='upload_users_csv'),
     path('admin/users/delete/<int:user_id>/', views.delete_user, name='delete_user'),
     path('admin_manage_users/', views.admin_manage_users, name='admin_manage_users'),
+    
+
 
 
 ]
